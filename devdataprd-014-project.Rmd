@@ -1,0 +1,57 @@
+---
+output: html_document
+---
+# Develop Data Products Project Description
+### by Leroy A. "Jack" Jackson (aka MontereyBayJack)
+
+## Overview
+The purpose of this project is to present some basic inferential data analysis as a Shiny Application. Specifically, we explore the exponential distribution by executing simulation experiments and then analyzing the results. The analysis compares the sample data mean with results expected from the Central Limit Theorem.  
+
+## Simulation
+
+In the simulation, we produce a user selected number of samples of 40 values from the same distribution, which is expnential with lambda=2.. We compute the mean and variance of each sample for analysis. Here is the code to execute the experiment.  
+```{r}
+ns <- 1000 # make this an input!
+ss <- 40  
+lambda <- 2
+sample <- vector(mode="numeric",length=0)
+xbar <- numeric(ns)
+ssqr <- numeric(ns)
+random.seed=2032 
+for (s in 1:ns) {
+      sample <- rexp(ss, lambda)
+      xbar[s] <- mean(sample)
+      ssqr[s] <- var(sample)
+}
+```
+## Sample Mean versus Theoretical Mean
+We analyze the distribution of the sample means. This distribution is centered at the grand mean of `r mean(xbar)` while the expected mean for this distribution, given a sufficiently large sample size, is `r 1/lambda` according to the central limit theorem. Below is a summary of the grand mean of the samples. 
+```{r echo=FALSE, fig.height=3} 
+summary(xbar)
+boxplot(xbar,main=paste0(ns," Sample Means"),horizontal=TRUE)
+```
+
+Below is a histogram showing the frequency of occurrence of the sample means with the actual (red) and theoretical (blue) mean shown. It confirms what we observe from the summary statistics for the samples. Note that the distribution is also nearly symmetrical like the normal distribution depicted in red as expected by the theory.  
+```{r echo=FALSE, fig.height=4}
+m <- paste0("Histogram of ",format(ns, digits=4, nsmall=0)," Sample Means")
+h<-hist(xbar, breaks="Scott",
+      main=m,
+      ylim=c(0,ns/3), xlab="Means")
+xfit<-seq(min(xbar),max(xbar),length=40) 
+yfit<-dnorm(xfit,mean=mean(xbar),sd=sd(xbar)) 
+yfit <- yfit*diff(h$mids[1:2])*length(xbar) 
+lines(xfit, yfit, col="red", lwd=2)
+abline(v=.5,col="blue",lty=3,lwd=2)
+abline(v=mean(xbar),col="red",lty=3,lwd=2)
+sm <- paste0("Mean of Samples = ",format(mean(xbar), digits=1, nsmall=4))
+legend(.575,ns/3,legend=c("Theoretical Mean = 0.5",sm),cex=.75)
+```
+  
+With one thousand samples, the two means are nearly identical (the two vesicle lines are difficult to distinguish) and the distribution of the means seems nearly normal. 
+
+Finally, we show additional evidence that the distribution of the means of the samples is approximately normal. In the section above on the distribution of the mean we noted that the histogram was symmetrical and appeared normal. We can visually check the goodness of fit of the samples versus the normal distribution with a Quantile-Quantile (Q-Q) Plot. Here are the means of the sample data versus the standard normal distribution in a Q-Q plot. 
+```{r echo=FALSE, fig.height=4}
+qqnorm(xbar)
+qqline(xbar)
+```
+The data points would fall exactly on the line if the data were perfectly normal. The plot verifies that the data are approximately normal and the fit improves with an increase in sample size. The greatest deviation from the line is farther from the center of the distribution as expected. The difference is in the tails of finite distribution of one thousand samples versus the infinite tails of the normal distribution. Furthermore, the observed means are limited below by zero.
